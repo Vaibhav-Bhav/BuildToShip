@@ -88,7 +88,7 @@ export default function StyleguidePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-6 sm:p-10 max-w-6xl mx-auto space-y-12">
+    <main role="main" className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-6 sm:p-10 max-w-6xl mx-auto space-y-12">
       {/* Header bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-[var(--input-border)]/50">
         <div>
@@ -385,6 +385,6 @@ export default function StyleguidePage() {
           />
         </div>
       </section>
-    </div>
+    </main>
   );
 }

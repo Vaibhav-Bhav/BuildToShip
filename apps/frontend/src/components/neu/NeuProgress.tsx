@@ -31,6 +31,7 @@ export const NeuProgress = React.forwardRef<
         "bg-[var(--bg)] shadow-[var(--neu-inset-sm)]",
         className
       )}
+      aria-label={props["aria-label"] || "Progress"}
       {...props}
     >
       <ProgressPrimitive.Indicator
