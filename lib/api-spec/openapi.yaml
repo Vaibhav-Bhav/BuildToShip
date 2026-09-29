@@ -3,13 +3,21 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: ResolveAI resolution copilot API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: cases
+    description: Customer issue cases
+  - name: orders
+    description: Mock customer orders
+  - name: analytics
+    description: Agent analytics
 paths:
   /healthz:
     get:
@@ -24,6 +32,299 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a customer account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Sign in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get the current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Error"
+  /orders/mine:
+    get:
+      operationId: getMyOrders
+      tags: [orders]
+      summary: List orders for the current customer
+      responses:
+        "200":
+          description: Orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+  /cases:
+    get:
+      operationId: getCases
+      tags: [cases]
+      summary: List cases for agents
+      parameters:
+        - $ref: "#/components/parameters/Status"
+        - $ref: "#/components/parameters/Priority"
+        - $ref: "#/components/parameters/Category"
+        - name: escalated
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Case"
+    post:
+      operationId: createCase
+      tags: [cases]
+      summary: Create a case from a customer issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaseInput"
+      responses:
+        "201":
+          description: Created case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseDetail"
+        "400":
+          $ref: "#/components/responses/Error"
+  /cases/mine:
+    get:
+      operationId: getMyCases
+      tags: [cases]
+      summary: List cases for the current customer
+      responses:
+        "200":
+          description: Cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Case"
+  /cases/{id}:
+    get:
+      operationId: getCase
+      tags: [cases]
+      summary: Get a case and its full history
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      responses:
+        "200":
+          description: Case detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseDetail"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /cases/{id}/messages:
+    post:
+      operationId: addCaseMessage
+      tags: [cases]
+      summary: Add a message to a case
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageInput"
+      responses:
+        "201":
+          description: Message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+  /cases/{id}/attachments:
+    post:
+      operationId: uploadAttachment
+      tags: [cases]
+      summary: Upload evidence to a case
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/AttachmentUploadInput"
+      responses:
+        "201":
+          description: Attachment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Attachment"
+  /cases/{id}/generate-reply:
+    post:
+      operationId: generateReply
+      tags: [cases]
+      summary: Generate an agent reply draft
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplyInput"
+      responses:
+        "200":
+          description: Draft reply
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyDraft"
+  /cases/{id}/send-reply:
+    post:
+      operationId: sendReply
+      tags: [cases]
+      summary: Send an agent reply
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplyInput"
+      responses:
+        "201":
+          description: Sent message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+  /cases/{id}/status:
+    patch:
+      operationId: updateCaseStatus
+      tags: [cases]
+      summary: Change case status
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StatusInput"
+      responses:
+        "200":
+          description: Updated case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Case"
+  /cases/{id}/override:
+    patch:
+      operationId: overrideCase
+      tags: [cases]
+      summary: Override an AI field
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OverrideInput"
+      responses:
+        "200":
+          description: Updated case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Case"
+  /cases/{id}/assign:
+    post:
+      operationId: assignCase
+      tags: [cases]
+      summary: Assign a case to an agent
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignInput"
+      responses:
+        "200":
+          description: Updated case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Case"
+  /analytics/summary:
+    get:
+      operationId: getAnalyticsSummary
+      tags: [analytics]
+      summary: Get agent dashboard analytics
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsSummary"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +334,223 @@ components:
           type: string
       required:
         - status
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+      required: [error]
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        role: { type: string, enum: [customer, agent] }
+      required: [id, name, email, role]
+    RegisterInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 2 }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+      required: [name, email, password]
+    LoginInput:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+      required: [email, password]
+    AuthResponse:
+      type: object
+      properties:
+        token: { type: string }
+        user: { $ref: "#/components/schemas/User" }
+      required: [token, user]
+    Order:
+      type: object
+      properties:
+        id: { type: integer }
+        order_code: { type: string }
+        user_id: { type: integer }
+        product_name: { type: string }
+        price: { type: number }
+        order_date: { type: string }
+        delivery_date: { type: string }
+        status: { type: string }
+      required: [id, order_code, user_id, product_name, price, order_date, delivery_date, status]
+    Case:
+      type: object
+      properties:
+        id: { type: integer }
+        case_code: { type: string }
+        user_id: { type: integer }
+        order_id: { type: ["integer", "null"] }
+        status: { type: string }
+        category: { type: string }
+        priority: { type: string }
+        sentiment: { type: string }
+        customer_intent: { type: string }
+        summary: { type: string }
+        recommended_action: { type: string }
+        next_step: { type: string }
+        escalation_required: { type: boolean }
+        escalation_reason: { type: ["string", "null"] }
+        missing_information:
+          type: array
+          items: { type: string }
+        resolution_plan:
+          type: array
+          items: { type: string }
+        assigned_agent_id: { type: ["integer", "null"] }
+        ai_failed: { type: boolean }
+        created_at: { type: string }
+        updated_at: { type: string }
+        due_at: { type: string }
+        customer_name: { type: ["string", "null"] }
+        order: { anyOf: [{ $ref: "#/components/schemas/Order" }, { type: "null" }] }
+      required:
+        [id, case_code, user_id, order_id, status, category, priority, sentiment, customer_intent, summary, recommended_action, next_step, escalation_required, missing_information, resolution_plan, ai_failed, created_at, updated_at, due_at]
+    CaseInput:
+      type: object
+      properties:
+        message: { type: string, minLength: 10 }
+        order_id: { type: ["integer", "null"] }
+      required: [message]
+    CaseDetail:
+      allOf:
+        - $ref: "#/components/schemas/Case"
+        - type: object
+          properties:
+            timeline:
+              type: array
+              items: { $ref: "#/components/schemas/CaseEvent" }
+            messages:
+              type: array
+              items: { $ref: "#/components/schemas/Message" }
+            attachments:
+              type: array
+              items: { $ref: "#/components/schemas/Attachment" }
+          required: [timeline, messages, attachments]
+    CaseEvent:
+      type: object
+      properties:
+        id: { type: integer }
+        case_id: { type: integer }
+        event_type: { type: string }
+        description: { type: string }
+        actor_type: { type: string }
+        created_at: { type: string }
+        metadata: { type: object, additionalProperties: true }
+      required: [id, case_id, event_type, description, actor_type, created_at]
+    Message:
+      type: object
+      properties:
+        id: { type: integer }
+        case_id: { type: integer }
+        sender_type: { type: string, enum: [customer, agent] }
+        body: { type: string }
+        created_at: { type: string }
+      required: [id, case_id, sender_type, body, created_at]
+    MessageInput:
+      type: object
+      properties:
+        body: { type: string, minLength: 1 }
+      required: [body]
+    Attachment:
+      type: object
+      properties:
+        id: { type: integer }
+        case_id: { type: integer }
+        file_name: { type: string }
+        file_path: { type: string }
+        uploaded_at: { type: string }
+      required: [id, case_id, file_name, file_path, uploaded_at]
+    AttachmentUploadInput:
+      type: object
+      properties:
+        file_name: { type: string, minLength: 1 }
+        file_data: { type: string, minLength: 1 }
+      required: [file_name, file_data]
+    ReplyInput:
+      type: object
+      properties:
+        body: { type: string, minLength: 1 }
+        tone: { type: string, enum: [warm, concise, professional] }
+      required: [body]
+    ReplyDraft:
+      type: object
+      properties:
+        draft: { type: string }
+      required: [draft]
+    StatusInput:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [New, Investigating, Awaiting Customer, Approved, Resolved, Rejected]
+      required: [status]
+    OverrideInput:
+      type: object
+      properties:
+        field: { type: string }
+        value: { type: string }
+      required: [field, value]
+    AssignInput:
+      type: object
+      properties:
+        agent_id: { type: integer }
+      required: [agent_id]
+    AnalyticsPoint:
+      type: object
+      properties:
+        label: { type: string }
+        value: { type: number }
+      required: [label, value]
+    AnalyticsSummary:
+      type: object
+      properties:
+        open_cases: { type: integer }
+        high_priority: { type: integer }
+        at_risk: { type: integer }
+        resolved_today: { type: integer }
+        repeat_contact_rate: { type: number }
+        by_category:
+          type: array
+          items: { $ref: "#/components/schemas/AnalyticsPoint" }
+        by_status:
+          type: array
+          items: { $ref: "#/components/schemas/AnalyticsPoint" }
+        per_day:
+          type: array
+          items: { $ref: "#/components/schemas/AnalyticsPoint" }
+      required: [open_cases, high_priority, at_risk, resolved_today, repeat_contact_rate, by_category, by_status, per_day]
+  parameters:
+    CaseId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    Status:
+      name: status
+      in: query
+      schema:
+        type: string
+        enum: [New, Investigating, Awaiting Customer, Approved, Resolved, Rejected]
+    Priority:
+      name: priority
+      in: query
+      schema:
+        type: string
+        enum: [Low, Medium, High, Critical]
+    Category:
+      name: category
+      in: query
+      schema: { type: string }
+  responses:
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
 

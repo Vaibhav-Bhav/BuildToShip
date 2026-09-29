@@ -47,3 +47,12 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# ResolveAI
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite
+artifacts/api-server/uploads/*
+!artifacts/api-server/uploads/.gitkeep

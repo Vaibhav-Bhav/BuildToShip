@@ -1,10 +1,13 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
+app.set("trust proxy", 1);
 
 app.use(
   pinoHttp({
@@ -25,10 +28,21 @@ app.use(
     },
   }),
 );
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 60, standardHeaders: true, legacyHeaders: false });
+const aiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false });
+app.use("/api/auth", authLimiter);
+app.use("/api/cases", (req, _res, next) => {
+  if (req.path.includes("generate-reply")) {
+    aiLimiter(req, _res, next);
+    return;
+  }
+  next();
+});
 app.use("/api", router);
 
 export default app;
