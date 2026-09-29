@@ -9,4 +9,6 @@
 export interface OverrideInput {
   field: string;
   value: string;
+  /** @minLength 1 */
+  reason: string;
 }

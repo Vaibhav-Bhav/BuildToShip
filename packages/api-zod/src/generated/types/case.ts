@@ -5,6 +5,7 @@
  * ResolveAI resolution copilot API
  * OpenAPI spec version: 0.1.0
  */
+import type { CaseAiSource } from './caseAiSource';
 import type { Order } from './order';
 
 export interface Case {
@@ -12,23 +13,25 @@ export interface Case {
   case_code: string;
   user_id: number;
   /** @nullable */
-  order_id: number | null;
+  order_id?: number | null;
   status: string;
   category: string;
-  priority: string;
-  sentiment: string;
-  customer_intent: string;
+  priority?: string;
+  sentiment?: string;
+  customer_intent?: string;
   summary: string;
-  recommended_action: string;
-  next_step: string;
-  escalation_required: boolean;
+  recommended_action?: string;
+  next_step?: string;
+  escalation_required?: boolean;
   /** @nullable */
   escalation_reason?: string | null;
-  missing_information: string[];
-  resolution_plan: string[];
+  missing_information?: string[];
+  resolution_plan?: string[];
   /** @nullable */
   assigned_agent_id?: number | null;
-  ai_failed: boolean;
+  ai_failed?: boolean;
+  ai_source?: CaseAiSource;
+  archived?: boolean;
   created_at: string;
   updated_at: string;
   due_at: string;

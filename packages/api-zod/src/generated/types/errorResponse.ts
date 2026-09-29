@@ -5,9 +5,7 @@
  * ResolveAI resolution copilot API
  * OpenAPI spec version: 0.1.0
  */
-import type { Error } from './error';
 
-/**
- * Error
- */
-export type ErrorResponse = Error;
+export interface ErrorResponse {
+  error: string;
+}

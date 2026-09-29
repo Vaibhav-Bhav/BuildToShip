@@ -9,7 +9,7 @@ export interface HealthStatus {
   status: string;
 }
 
-export interface Error {
+export interface ErrorResponse {
   error: string;
 }
 
@@ -62,34 +62,65 @@ export interface Order {
   status: string;
 }
 
+export interface CustomerCase {
+  id: number;
+  case_code: string;
+  status: string;
+  category: string;
+  summary: string;
+  created_at: string;
+  updated_at: string;
+  due_at: string;
+  /** @nullable */
+  order_id?: number | null;
+  order?: Order | null;
+}
+
+export type CaseAiSource = typeof CaseAiSource[keyof typeof CaseAiSource];
+
+
+export const CaseAiSource = {
+  groq: 'groq',
+  fallback: 'fallback',
+} as const;
+
 export interface Case {
   id: number;
   case_code: string;
   user_id: number;
   /** @nullable */
-  order_id: number | null;
+  order_id?: number | null;
   status: string;
   category: string;
-  priority: string;
-  sentiment: string;
-  customer_intent: string;
+  priority?: string;
+  sentiment?: string;
+  customer_intent?: string;
   summary: string;
-  recommended_action: string;
-  next_step: string;
-  escalation_required: boolean;
+  recommended_action?: string;
+  next_step?: string;
+  escalation_required?: boolean;
   /** @nullable */
   escalation_reason?: string | null;
-  missing_information: string[];
-  resolution_plan: string[];
+  missing_information?: string[];
+  resolution_plan?: string[];
   /** @nullable */
   assigned_agent_id?: number | null;
-  ai_failed: boolean;
+  ai_failed?: boolean;
+  ai_source?: CaseAiSource;
+  archived?: boolean;
   created_at: string;
   updated_at: string;
   due_at: string;
   /** @nullable */
   customer_name?: string | null;
   order?: Order | null;
+}
+
+export interface PaginatedCases {
+  cases: Case[];
+  total: number;
+  page?: number;
+  limit?: number;
 }
 
 export interface CaseInput {
@@ -99,7 +130,7 @@ export interface CaseInput {
   order_id?: number | null;
 }
 
-export type CaseEventMetadata = { [key: string]: unknown };
+export interface CaseEventMetadata { [key: string]: unknown }
 
 export interface CaseEvent {
   id: number;
@@ -107,8 +138,11 @@ export interface CaseEvent {
   event_type: string;
   description: string;
   actor_type: string;
+  /** @nullable */
+  actor_id?: number | null;
   created_at: string;
   metadata?: CaseEventMetadata;
+  visible_to_customer?: boolean;
 }
 
 export type MessageSenderType = typeof MessageSenderType[keyof typeof MessageSenderType];
@@ -138,10 +172,29 @@ export interface Attachment {
   uploaded_at: string;
 }
 
+export type PromiseItemStatus = typeof PromiseItemStatus[keyof typeof PromiseItemStatus];
+
+
+export const PromiseItemStatus = {
+  pending: 'pending',
+  kept: 'kept',
+  broken: 'broken',
+} as const;
+
+export interface PromiseItem {
+  id: number;
+  case_id: number;
+  text: string;
+  due_at: string;
+  status: PromiseItemStatus;
+  created_at: string;
+}
+
 export type CaseDetail = Case & {
   timeline: CaseEvent[];
   messages: Message[];
   attachments: Attachment[];
+  promises?: PromiseItem[];
 };
 
 export interface MessageInput {
@@ -178,6 +231,13 @@ export interface ReplyInput {
 
 export interface ReplyDraft {
   draft: string;
+  /** @nullable */
+  policy_cited?: string | null;
+  warnings: string[];
+}
+
+export interface ResolutionPlanResponse {
+  plan: string[];
 }
 
 export type StatusInputStatus = typeof StatusInputStatus[keyof typeof StatusInputStatus];
@@ -199,10 +259,31 @@ export interface StatusInput {
 export interface OverrideInput {
   field: string;
   value: string;
+  /** @minLength 1 */
+  reason: string;
 }
 
 export interface AssignInput {
-  agent_id: number;
+  agent_id?: number;
+}
+
+export interface PromiseInput {
+  /** @minLength 1 */
+  text: string;
+  due_at: string;
+}
+
+export type UpdatePromiseStatusInputStatus = typeof UpdatePromiseStatusInputStatus[keyof typeof UpdatePromiseStatusInputStatus];
+
+
+export const UpdatePromiseStatusInputStatus = {
+  pending: 'pending',
+  kept: 'kept',
+  broken: 'broken',
+} as const;
+
+export interface UpdatePromiseStatusInput {
+  status: UpdatePromiseStatusInputStatus;
 }
 
 export interface AnalyticsPoint {
@@ -216,15 +297,14 @@ export interface AnalyticsSummary {
   at_risk: number;
   resolved_today: number;
   repeat_contact_rate: number;
+  avg_resolution_hours: number;
+  /** @nullable */
+  broken_promise_rate?: number | null;
   by_category: AnalyticsPoint[];
   by_status: AnalyticsPoint[];
-  per_day: AnalyticsPoint[];
+  resolved_per_day: AnalyticsPoint[];
+  per_day?: AnalyticsPoint[];
 }
-
-/**
- * Error
- */
-export type ErrorResponse = Error;
 
 export type StatusParameter = typeof StatusParameter[keyof typeof StatusParameter];
 
@@ -248,12 +328,39 @@ export const PriorityParameter = {
   Critical: 'Critical',
 } as const;
 
-export type CategoryParameter = string;
+export type CategoryParameter = typeof CategoryParameter[keyof typeof CategoryParameter];
+
+
+export const CategoryParameter = {
+  Damaged_Product: 'Damaged Product',
+  Delivery_Delay: 'Delivery Delay',
+  Refund: 'Refund',
+  Return: 'Return',
+  Warranty: 'Warranty',
+  Replacement: 'Replacement',
+  Cancellation: 'Cancellation',
+  Other: 'Other',
+} as const;
 
 export type GetCasesParams = {
+search?: string;
 status?: StatusParameter;
 priority?: PriorityParameter;
 category?: CategoryParameter;
 escalated?: boolean;
+includeArchived?: boolean;
+sort?: GetCasesSort;
+page?: number;
+limit?: number;
 };
+
+export type GetCasesSort = typeof GetCasesSort[keyof typeof GetCasesSort];
+
+
+export const GetCasesSort = {
+  newest: 'newest',
+  oldest: 'oldest',
+  priority: 'priority',
+  due_soonest: 'due_soonest',
+} as const;
 

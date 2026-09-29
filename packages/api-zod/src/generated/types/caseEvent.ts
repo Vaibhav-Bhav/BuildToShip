@@ -13,6 +13,9 @@ export interface CaseEvent {
   event_type: string;
   description: string;
   actor_type: string;
+  /** @nullable */
+  actor_id?: number | null;
   created_at: string;
   metadata?: CaseEventMetadata;
+  visible_to_customer?: boolean;
 }

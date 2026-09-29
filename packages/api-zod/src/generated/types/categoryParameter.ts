@@ -6,4 +6,16 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type CategoryParameter = string;
+export type CategoryParameter = typeof CategoryParameter[keyof typeof CategoryParameter];
+
+
+export const CategoryParameter = {
+  Damaged_Product: 'Damaged Product',
+  Delivery_Delay: 'Delivery Delay',
+  Refund: 'Refund',
+  Return: 'Return',
+  Warranty: 'Warranty',
+  Replacement: 'Replacement',
+  Cancellation: 'Cancellation',
+  Other: 'Other',
+} as const;

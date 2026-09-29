@@ -6,4 +6,4 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type CaseEventMetadata = { [key: string]: unknown };
+export interface CaseEventMetadata { [key: string]: unknown }

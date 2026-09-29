@@ -125,8 +125,12 @@ paths:
     get:
       operationId: getCases
       tags: [cases]
-      summary: List cases for agents
+      summary: List cases for agents with filters and pagination
       parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
         - $ref: "#/components/parameters/Status"
         - $ref: "#/components/parameters/Priority"
         - $ref: "#/components/parameters/Category"
@@ -134,15 +138,32 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: includeArchived
+          in: query
+          schema:
+            type: boolean
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [newest, oldest, priority, due_soonest]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
       responses:
         "200":
-          description: Cases
+          description: Cases with total count
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Case"
+                $ref: "#/components/schemas/PaginatedCases"
     post:
       operationId: createCase
       tags: [cases]
@@ -166,21 +187,21 @@ paths:
     get:
       operationId: getMyCases
       tags: [cases]
-      summary: List cases for the current customer
+      summary: List cases for the current customer (customer-safe fields only)
       responses:
         "200":
-          description: Cases
+          description: Customer cases
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Case"
+                  $ref: "#/components/schemas/CustomerCase"
   /cases/{id}:
     get:
       operationId: getCase
       tags: [cases]
-      summary: Get a case and its full history
+      summary: Get a case and its history (customer gets safe view, agent gets full workspace view)
       parameters:
         - $ref: "#/components/parameters/CaseId"
       responses:
@@ -262,7 +283,7 @@ paths:
     post:
       operationId: generateReply
       tags: [cases]
-      summary: Generate an agent reply draft
+      summary: Generate an agent reply draft with policy cited and warnings
       parameters:
         - $ref: "#/components/parameters/CaseId"
       requestBody:
@@ -298,6 +319,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Message"
+  /cases/{id}/resolution-plan:
+    post:
+      operationId: generateResolutionPlan
+      tags: [cases]
+      summary: Generate an AI checklist resolution plan for a case
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      responses:
+        "200":
+          description: Resolution plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResolutionPlanResponse"
   /cases/{id}/status:
     patch:
       operationId: updateCaseStatus
@@ -322,7 +357,7 @@ paths:
     patch:
       operationId: overrideCase
       tags: [cases]
-      summary: Override an AI field
+      summary: Override an AI field with required reason
       parameters:
         - $ref: "#/components/parameters/CaseId"
       requestBody:
@@ -342,11 +377,11 @@ paths:
     post:
       operationId: assignCase
       tags: [cases]
-      summary: Assign a case to an agent
+      summary: Assign a case to the logged-in agent
       parameters:
         - $ref: "#/components/parameters/CaseId"
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
@@ -358,39 +393,126 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Case"
+  /cases/{id}/archive:
+    post:
+      operationId: archiveCase
+      tags: [cases]
+      summary: Archive a case
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      responses:
+        "200":
+          description: Archived case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Case"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /cases/{id}/promises:
+    get:
+      operationId: getCasePromises
+      tags: [cases]
+      summary: Get all promises for a case
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      responses:
+        "200":
+          description: Promises
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PromiseItem"
+    put:
+      operationId: updateCasePromise
+      tags: [cases]
+      summary: Add or update a promise on a case
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PromiseInput"
+      responses:
+        "200":
+          description: Updated promise
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PromiseItem"
+  /promises/{id}:
+    patch:
+      operationId: updatePromiseStatus
+      tags: [cases]
+      summary: Update promise status (e.g. mark kept)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePromiseStatusInput"
+      responses:
+        "200":
+          description: Updated promise
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PromiseItem"
   /analytics/summary:
     get:
       operationId: getAnalyticsSummary
       tags: [analytics]
-      summary: Get agent dashboard analytics
+      summary: Agent resolution metrics summary
       responses:
         "200":
-          description: Dashboard summary
+          description: Metrics summary
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/AnalyticsSummary"
 components:
+  responses:
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
   schemas:
     HealthStatus:
       type: object
       properties:
-        status:
-          type: string
-      required:
-        - status
-    Error:
+        status: { type: string }
+      required: [status]
+    ErrorResponse:
       type: object
       properties:
         error: { type: string }
       required: [error]
+    UserRole:
+      type: string
+      enum: [customer, agent]
     User:
       type: object
       properties:
         id: { type: integer }
         name: { type: string }
         email: { type: string }
-        role: { type: string, enum: [customer, agent] }
+        role: { $ref: "#/components/schemas/UserRole" }
       required: [id, name, email, role]
     RegisterInput:
       type: object
@@ -402,7 +524,7 @@ components:
     LoginInput:
       type: object
       properties:
-        email: { type: string, format: email }
+        email: { type: string }
         password: { type: string }
       required: [email, password]
     AuthResponse:
@@ -428,6 +550,20 @@ components:
         delivery_date: { type: string }
         status: { type: string }
       required: [id, order_code, user_id, product_name, price, order_date, delivery_date, status]
+    CustomerCase:
+      type: object
+      properties:
+        id: { type: integer }
+        case_code: { type: string }
+        status: { type: string }
+        category: { type: string }
+        summary: { type: string }
+        created_at: { type: string }
+        updated_at: { type: string }
+        due_at: { type: string }
+        order_id: { type: ["integer", "null"] }
+        order: { anyOf: [{ $ref: "#/components/schemas/Order" }, { type: "null" }] }
+      required: [id, case_code, status, category, summary, created_at, updated_at, due_at]
     Case:
       type: object
       properties:
@@ -453,13 +589,25 @@ components:
           items: { type: string }
         assigned_agent_id: { type: ["integer", "null"] }
         ai_failed: { type: boolean }
+        ai_source: { type: string, enum: [groq, fallback] }
+        archived: { type: boolean }
         created_at: { type: string }
         updated_at: { type: string }
         due_at: { type: string }
         customer_name: { type: ["string", "null"] }
         order: { anyOf: [{ $ref: "#/components/schemas/Order" }, { type: "null" }] }
       required:
-        [id, case_code, user_id, order_id, status, category, priority, sentiment, customer_intent, summary, recommended_action, next_step, escalation_required, missing_information, resolution_plan, ai_failed, created_at, updated_at, due_at]
+        [id, case_code, user_id, status, category, summary, created_at, updated_at, due_at]
+    PaginatedCases:
+      type: object
+      properties:
+        cases:
+          type: array
+          items: { $ref: "#/components/schemas/Case" }
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+      required: [cases, total]
     CaseInput:
       type: object
       properties:
@@ -480,7 +628,13 @@ components:
             attachments:
               type: array
               items: { $ref: "#/components/schemas/Attachment" }
+            promises:
+              type: array
+              items: { $ref: "#/components/schemas/PromiseItem" }
           required: [timeline, messages, attachments]
+    CaseEventMetadata:
+      type: object
+      additionalProperties: true
     CaseEvent:
       type: object
       properties:
@@ -489,15 +643,20 @@ components:
         event_type: { type: string }
         description: { type: string }
         actor_type: { type: string }
+        actor_id: { type: ["integer", "null"] }
         created_at: { type: string }
-        metadata: { type: object, additionalProperties: true }
+        metadata: { $ref: "#/components/schemas/CaseEventMetadata" }
+        visible_to_customer: { type: boolean }
       required: [id, case_id, event_type, description, actor_type, created_at]
+    MessageSenderType:
+      type: string
+      enum: [customer, agent]
     Message:
       type: object
       properties:
         id: { type: integer }
         case_id: { type: integer }
-        sender_type: { type: string, enum: [customer, agent] }
+        sender_type: { $ref: "#/components/schemas/MessageSenderType" }
         body: { type: string }
         created_at: { type: string }
       required: [id, case_id, sender_type, body, created_at]
@@ -530,35 +689,71 @@ components:
         file_name: { type: string, minLength: 1 }
         file_data: { type: string, minLength: 1 }
       required: [file_name, file_data]
+    ReplyInputTone:
+      type: string
+      enum: [warm, concise, professional]
     ReplyInput:
       type: object
       properties:
         body: { type: string, minLength: 1 }
-        tone: { type: string, enum: [warm, concise, professional] }
+        tone: { $ref: "#/components/schemas/ReplyInputTone" }
       required: [body]
     ReplyDraft:
       type: object
       properties:
         draft: { type: string }
-      required: [draft]
+        policy_cited: { type: ["string", "null"] }
+        warnings:
+          type: array
+          items: { type: string }
+      required: [draft, warnings]
+    ResolutionPlanResponse:
+      type: object
+      properties:
+        plan:
+          type: array
+          items: { type: string }
+      required: [plan]
+    StatusInputStatus:
+      type: string
+      enum: [New, Investigating, Awaiting Customer, Approved, Resolved, Rejected]
     StatusInput:
       type: object
       properties:
-        status:
-          type: string
-          enum: [New, Investigating, Awaiting Customer, Approved, Resolved, Rejected]
+        status: { $ref: "#/components/schemas/StatusInputStatus" }
       required: [status]
     OverrideInput:
       type: object
       properties:
         field: { type: string }
         value: { type: string }
-      required: [field, value]
+        reason: { type: string, minLength: 1 }
+      required: [field, value, reason]
     AssignInput:
       type: object
       properties:
         agent_id: { type: integer }
-      required: [agent_id]
+    PromiseItem:
+      type: object
+      properties:
+        id: { type: integer }
+        case_id: { type: integer }
+        text: { type: string }
+        due_at: { type: string }
+        status: { type: string, enum: [pending, kept, broken] }
+        created_at: { type: string }
+      required: [id, case_id, text, due_at, status, created_at]
+    PromiseInput:
+      type: object
+      properties:
+        text: { type: string, minLength: 1 }
+        due_at: { type: string }
+      required: [text, due_at]
+    UpdatePromiseStatusInput:
+      type: object
+      properties:
+        status: { type: string, enum: [pending, kept, broken] }
+      required: [status]
     AnalyticsPoint:
       type: object
       properties:
@@ -573,16 +768,21 @@ components:
         at_risk: { type: integer }
         resolved_today: { type: integer }
         repeat_contact_rate: { type: number }
+        avg_resolution_hours: { type: number }
+        broken_promise_rate: { type: ["number", "null"] }
         by_category:
           type: array
           items: { $ref: "#/components/schemas/AnalyticsPoint" }
         by_status:
           type: array
           items: { $ref: "#/components/schemas/AnalyticsPoint" }
+        resolved_per_day:
+          type: array
+          items: { $ref: "#/components/schemas/AnalyticsPoint" }
         per_day:
           type: array
           items: { $ref: "#/components/schemas/AnalyticsPoint" }
-      required: [open_cases, high_priority, at_risk, resolved_today, repeat_contact_rate, by_category, by_status, per_day]
+      required: [open_cases, high_priority, at_risk, resolved_today, repeat_contact_rate, avg_resolution_hours, by_category, by_status, resolved_per_day]
   parameters:
     CaseId:
       name: id
@@ -604,12 +804,6 @@ components:
     Category:
       name: category
       in: query
-      schema: { type: string }
-  responses:
-    Error:
-      description: Error
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/Error"
-
+      schema:
+        type: string
+        enum: [Damaged Product, Delivery Delay, Refund, Return, Warranty, Replacement, Cancellation, Other]

@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface Error {
-  error: string;
+export interface PromiseInput {
+  /** @minLength 1 */
+  text: string;
+  due_at: string;
 }

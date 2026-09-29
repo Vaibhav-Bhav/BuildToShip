@@ -9,9 +9,11 @@ import type { Attachment } from './attachment';
 import type { Case } from './case';
 import type { CaseEvent } from './caseEvent';
 import type { Message } from './message';
+import type { PromiseItem } from './promiseItem';
 
 export type CaseDetail = Case & {
   timeline: CaseEvent[];
   messages: Message[];
   attachments: Attachment[];
+  promises?: PromiseItem[];
 };

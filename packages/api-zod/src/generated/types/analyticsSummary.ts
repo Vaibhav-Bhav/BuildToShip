@@ -13,7 +13,11 @@ export interface AnalyticsSummary {
   at_risk: number;
   resolved_today: number;
   repeat_contact_rate: number;
+  avg_resolution_hours: number;
+  /** @nullable */
+  broken_promise_rate?: number | null;
   by_category: AnalyticsPoint[];
   by_status: AnalyticsPoint[];
-  per_day: AnalyticsPoint[];
+  resolved_per_day: AnalyticsPoint[];
+  per_day?: AnalyticsPoint[];
 }

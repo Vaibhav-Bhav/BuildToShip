@@ -6,9 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface ReplyDraft {
-  draft: string;
-  /** @nullable */
-  policy_cited?: string | null;
-  warnings: string[];
+export interface ResolutionPlanResponse {
+  plan: string[];
 }

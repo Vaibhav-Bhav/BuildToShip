@@ -7,5 +7,5 @@
  */
 
 export interface AssignInput {
-  agent_id: number;
+  agent_id?: number;
 }

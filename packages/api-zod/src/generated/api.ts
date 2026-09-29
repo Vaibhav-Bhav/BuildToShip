@@ -47,7 +47,7 @@ export const RegisterResponse = zod.object({
  * @summary Sign in
  */
 export const LoginBody = zod.object({
-  "email": zod.string().email(),
+  "email": zod.string(),
   "password": zod.string()
 })
 
@@ -109,34 +109,45 @@ export const GetMyOrdersResponse = zod.array(GetMyOrdersResponseItem)
 
 
 /**
- * @summary List cases for agents
+ * @summary List cases for agents with filters and pagination
  */
+export const getCasesQueryPageDefault = 1;
+export const getCasesQueryLimitDefault = 20;
+
 export const GetCasesQueryParams = zod.object({
+  "search": zod.coerce.string().optional(),
   "status": zod.enum(['New', 'Investigating', 'Awaiting Customer', 'Approved', 'Resolved', 'Rejected']).optional(),
   "priority": zod.enum(['Low', 'Medium', 'High', 'Critical']).optional(),
-  "category": zod.coerce.string().optional(),
-  "escalated": zod.coerce.boolean().optional()
+  "category": zod.enum(['Damaged Product', 'Delivery Delay', 'Refund', 'Return', 'Warranty', 'Replacement', 'Cancellation', 'Other']).optional(),
+  "escalated": zod.coerce.boolean().optional(),
+  "includeArchived": zod.coerce.boolean().optional(),
+  "sort": zod.enum(['newest', 'oldest', 'priority', 'due_soonest']).optional(),
+  "page": zod.coerce.number().int().default(getCasesQueryPageDefault),
+  "limit": zod.coerce.number().int().default(getCasesQueryLimitDefault)
 })
 
-export const GetCasesResponseItem = zod.object({
+export const GetCasesResponse = zod.object({
+  "cases": zod.array(zod.object({
   "id": zod.number().int(),
   "case_code": zod.string(),
   "user_id": zod.number().int(),
-  "order_id": zod.number().int().nullable(),
+  "order_id": zod.number().int().nullish(),
   "status": zod.string(),
   "category": zod.string(),
-  "priority": zod.string(),
-  "sentiment": zod.string(),
-  "customer_intent": zod.string(),
+  "priority": zod.string().optional(),
+  "sentiment": zod.string().optional(),
+  "customer_intent": zod.string().optional(),
   "summary": zod.string(),
-  "recommended_action": zod.string(),
-  "next_step": zod.string(),
-  "escalation_required": zod.boolean(),
+  "recommended_action": zod.string().optional(),
+  "next_step": zod.string().optional(),
+  "escalation_required": zod.boolean().optional(),
   "escalation_reason": zod.string().nullish(),
-  "missing_information": zod.array(zod.string()),
-  "resolution_plan": zod.array(zod.string()),
+  "missing_information": zod.array(zod.string()).optional(),
+  "resolution_plan": zod.array(zod.string()).optional(),
   "assigned_agent_id": zod.number().int().nullish(),
-  "ai_failed": zod.boolean(),
+  "ai_failed": zod.boolean().optional(),
+  "ai_source": zod.enum(['groq', 'fallback']).optional(),
+  "archived": zod.boolean().optional(),
   "created_at": zod.string(),
   "updated_at": zod.string(),
   "due_at": zod.string(),
@@ -151,8 +162,11 @@ export const GetCasesResponseItem = zod.object({
   "delivery_date": zod.string(),
   "status": zod.string()
 }),zod.null()]).optional()
+})),
+  "total": zod.number().int(),
+  "page": zod.number().int().optional(),
+  "limit": zod.number().int().optional()
 })
-export const GetCasesResponse = zod.array(GetCasesResponseItem)
 
 
 /**
@@ -171,21 +185,23 @@ export const CreateCaseResponse = zod.object({
   "id": zod.number().int(),
   "case_code": zod.string(),
   "user_id": zod.number().int(),
-  "order_id": zod.number().int().nullable(),
+  "order_id": zod.number().int().nullish(),
   "status": zod.string(),
   "category": zod.string(),
-  "priority": zod.string(),
-  "sentiment": zod.string(),
-  "customer_intent": zod.string(),
+  "priority": zod.string().optional(),
+  "sentiment": zod.string().optional(),
+  "customer_intent": zod.string().optional(),
   "summary": zod.string(),
-  "recommended_action": zod.string(),
-  "next_step": zod.string(),
-  "escalation_required": zod.boolean(),
+  "recommended_action": zod.string().optional(),
+  "next_step": zod.string().optional(),
+  "escalation_required": zod.boolean().optional(),
   "escalation_reason": zod.string().nullish(),
-  "missing_information": zod.array(zod.string()),
-  "resolution_plan": zod.array(zod.string()),
+  "missing_information": zod.array(zod.string()).optional(),
+  "resolution_plan": zod.array(zod.string()).optional(),
   "assigned_agent_id": zod.number().int().nullish(),
-  "ai_failed": zod.boolean(),
+  "ai_failed": zod.boolean().optional(),
+  "ai_source": zod.enum(['groq', 'fallback']).optional(),
+  "archived": zod.boolean().optional(),
   "created_at": zod.string(),
   "updated_at": zod.string(),
   "due_at": zod.string(),
@@ -207,8 +223,10 @@ export const CreateCaseResponse = zod.object({
   "event_type": zod.string(),
   "description": zod.string(),
   "actor_type": zod.string(),
+  "actor_id": zod.number().int().nullish(),
   "created_at": zod.string(),
-  "metadata": zod.record(zod.string(), zod.unknown()).optional()
+  "metadata": zod.record(zod.string(), zod.unknown()).optional(),
+  "visible_to_customer": zod.boolean().optional()
 })),
   "messages": zod.array(zod.object({
   "id": zod.number().int(),
@@ -226,36 +244,31 @@ export const CreateCaseResponse = zod.object({
   "mime_type": zod.string().optional(),
   "size_bytes": zod.number().int().optional(),
   "uploaded_at": zod.string()
-}))
+})),
+  "promises": zod.array(zod.object({
+  "id": zod.number().int(),
+  "case_id": zod.number().int(),
+  "text": zod.string(),
+  "due_at": zod.string(),
+  "status": zod.enum(['pending', 'kept', 'broken']),
+  "created_at": zod.string()
+})).optional()
 }))
 
 
 /**
- * @summary List cases for the current customer
+ * @summary List cases for the current customer (customer-safe fields only)
  */
 export const GetMyCasesResponseItem = zod.object({
   "id": zod.number().int(),
   "case_code": zod.string(),
-  "user_id": zod.number().int(),
-  "order_id": zod.number().int().nullable(),
   "status": zod.string(),
   "category": zod.string(),
-  "priority": zod.string(),
-  "sentiment": zod.string(),
-  "customer_intent": zod.string(),
   "summary": zod.string(),
-  "recommended_action": zod.string(),
-  "next_step": zod.string(),
-  "escalation_required": zod.boolean(),
-  "escalation_reason": zod.string().nullish(),
-  "missing_information": zod.array(zod.string()),
-  "resolution_plan": zod.array(zod.string()),
-  "assigned_agent_id": zod.number().int().nullish(),
-  "ai_failed": zod.boolean(),
   "created_at": zod.string(),
   "updated_at": zod.string(),
   "due_at": zod.string(),
-  "customer_name": zod.string().nullish(),
+  "order_id": zod.number().int().nullish(),
   "order": zod.union([zod.object({
   "id": zod.number().int(),
   "order_code": zod.string(),
@@ -271,7 +284,7 @@ export const GetMyCasesResponse = zod.array(GetMyCasesResponseItem)
 
 
 /**
- * @summary Get a case and its full history
+ * @summary Get a case and its history (customer gets safe view, agent gets full workspace view)
  */
 export const GetCaseParams = zod.object({
   "id": zod.coerce.number().int()
@@ -281,21 +294,23 @@ export const GetCaseResponse = zod.object({
   "id": zod.number().int(),
   "case_code": zod.string(),
   "user_id": zod.number().int(),
-  "order_id": zod.number().int().nullable(),
+  "order_id": zod.number().int().nullish(),
   "status": zod.string(),
   "category": zod.string(),
-  "priority": zod.string(),
-  "sentiment": zod.string(),
-  "customer_intent": zod.string(),
+  "priority": zod.string().optional(),
+  "sentiment": zod.string().optional(),
+  "customer_intent": zod.string().optional(),
   "summary": zod.string(),
-  "recommended_action": zod.string(),
-  "next_step": zod.string(),
-  "escalation_required": zod.boolean(),
+  "recommended_action": zod.string().optional(),
+  "next_step": zod.string().optional(),
+  "escalation_required": zod.boolean().optional(),
   "escalation_reason": zod.string().nullish(),
-  "missing_information": zod.array(zod.string()),
-  "resolution_plan": zod.array(zod.string()),
+  "missing_information": zod.array(zod.string()).optional(),
+  "resolution_plan": zod.array(zod.string()).optional(),
   "assigned_agent_id": zod.number().int().nullish(),
-  "ai_failed": zod.boolean(),
+  "ai_failed": zod.boolean().optional(),
+  "ai_source": zod.enum(['groq', 'fallback']).optional(),
+  "archived": zod.boolean().optional(),
   "created_at": zod.string(),
   "updated_at": zod.string(),
   "due_at": zod.string(),
@@ -317,8 +332,10 @@ export const GetCaseResponse = zod.object({
   "event_type": zod.string(),
   "description": zod.string(),
   "actor_type": zod.string(),
+  "actor_id": zod.number().int().nullish(),
   "created_at": zod.string(),
-  "metadata": zod.record(zod.string(), zod.unknown()).optional()
+  "metadata": zod.record(zod.string(), zod.unknown()).optional(),
+  "visible_to_customer": zod.boolean().optional()
 })),
   "messages": zod.array(zod.object({
   "id": zod.number().int(),
@@ -336,7 +353,15 @@ export const GetCaseResponse = zod.object({
   "mime_type": zod.string().optional(),
   "size_bytes": zod.number().int().optional(),
   "uploaded_at": zod.string()
-}))
+})),
+  "promises": zod.array(zod.object({
+  "id": zod.number().int(),
+  "case_id": zod.number().int(),
+  "text": zod.string(),
+  "due_at": zod.string(),
+  "status": zod.enum(['pending', 'kept', 'broken']),
+  "created_at": zod.string()
+})).optional()
 }))
 
 
@@ -405,7 +430,7 @@ export const GetAttachmentUrlResponse = zod.object({
 
 
 /**
- * @summary Generate an agent reply draft
+ * @summary Generate an agent reply draft with policy cited and warnings
  */
 export const GenerateReplyParams = zod.object({
   "id": zod.coerce.number().int()
@@ -420,7 +445,9 @@ export const GenerateReplyBody = zod.object({
 })
 
 export const GenerateReplyResponse = zod.object({
-  "draft": zod.string()
+  "draft": zod.string(),
+  "policy_cited": zod.string().nullish(),
+  "warnings": zod.array(zod.string())
 })
 
 
@@ -449,6 +476,18 @@ export const SendReplyResponse = zod.object({
 
 
 /**
+ * @summary Generate an AI checklist resolution plan for a case
+ */
+export const GenerateResolutionPlanParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GenerateResolutionPlanResponse = zod.object({
+  "plan": zod.array(zod.string())
+})
+
+
+/**
  * @summary Change case status
  */
 export const UpdateCaseStatusParams = zod.object({
@@ -463,21 +502,23 @@ export const UpdateCaseStatusResponse = zod.object({
   "id": zod.number().int(),
   "case_code": zod.string(),
   "user_id": zod.number().int(),
-  "order_id": zod.number().int().nullable(),
+  "order_id": zod.number().int().nullish(),
   "status": zod.string(),
   "category": zod.string(),
-  "priority": zod.string(),
-  "sentiment": zod.string(),
-  "customer_intent": zod.string(),
+  "priority": zod.string().optional(),
+  "sentiment": zod.string().optional(),
+  "customer_intent": zod.string().optional(),
   "summary": zod.string(),
-  "recommended_action": zod.string(),
-  "next_step": zod.string(),
-  "escalation_required": zod.boolean(),
+  "recommended_action": zod.string().optional(),
+  "next_step": zod.string().optional(),
+  "escalation_required": zod.boolean().optional(),
   "escalation_reason": zod.string().nullish(),
-  "missing_information": zod.array(zod.string()),
-  "resolution_plan": zod.array(zod.string()),
+  "missing_information": zod.array(zod.string()).optional(),
+  "resolution_plan": zod.array(zod.string()).optional(),
   "assigned_agent_id": zod.number().int().nullish(),
-  "ai_failed": zod.boolean(),
+  "ai_failed": zod.boolean().optional(),
+  "ai_source": zod.enum(['groq', 'fallback']).optional(),
+  "archived": zod.boolean().optional(),
   "created_at": zod.string(),
   "updated_at": zod.string(),
   "due_at": zod.string(),
@@ -496,36 +537,42 @@ export const UpdateCaseStatusResponse = zod.object({
 
 
 /**
- * @summary Override an AI field
+ * @summary Override an AI field with required reason
  */
 export const OverrideCaseParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
+
+
+
 export const OverrideCaseBody = zod.object({
   "field": zod.string(),
-  "value": zod.string()
+  "value": zod.string(),
+  "reason": zod.string().min(1)
 })
 
 export const OverrideCaseResponse = zod.object({
   "id": zod.number().int(),
   "case_code": zod.string(),
   "user_id": zod.number().int(),
-  "order_id": zod.number().int().nullable(),
+  "order_id": zod.number().int().nullish(),
   "status": zod.string(),
   "category": zod.string(),
-  "priority": zod.string(),
-  "sentiment": zod.string(),
-  "customer_intent": zod.string(),
+  "priority": zod.string().optional(),
+  "sentiment": zod.string().optional(),
+  "customer_intent": zod.string().optional(),
   "summary": zod.string(),
-  "recommended_action": zod.string(),
-  "next_step": zod.string(),
-  "escalation_required": zod.boolean(),
+  "recommended_action": zod.string().optional(),
+  "next_step": zod.string().optional(),
+  "escalation_required": zod.boolean().optional(),
   "escalation_reason": zod.string().nullish(),
-  "missing_information": zod.array(zod.string()),
-  "resolution_plan": zod.array(zod.string()),
+  "missing_information": zod.array(zod.string()).optional(),
+  "resolution_plan": zod.array(zod.string()).optional(),
   "assigned_agent_id": zod.number().int().nullish(),
-  "ai_failed": zod.boolean(),
+  "ai_failed": zod.boolean().optional(),
+  "ai_source": zod.enum(['groq', 'fallback']).optional(),
+  "archived": zod.boolean().optional(),
   "created_at": zod.string(),
   "updated_at": zod.string(),
   "due_at": zod.string(),
@@ -544,35 +591,37 @@ export const OverrideCaseResponse = zod.object({
 
 
 /**
- * @summary Assign a case to an agent
+ * @summary Assign a case to the logged-in agent
  */
 export const AssignCaseParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
 export const AssignCaseBody = zod.object({
-  "agent_id": zod.number().int()
+  "agent_id": zod.number().int().optional()
 })
 
 export const AssignCaseResponse = zod.object({
   "id": zod.number().int(),
   "case_code": zod.string(),
   "user_id": zod.number().int(),
-  "order_id": zod.number().int().nullable(),
+  "order_id": zod.number().int().nullish(),
   "status": zod.string(),
   "category": zod.string(),
-  "priority": zod.string(),
-  "sentiment": zod.string(),
-  "customer_intent": zod.string(),
+  "priority": zod.string().optional(),
+  "sentiment": zod.string().optional(),
+  "customer_intent": zod.string().optional(),
   "summary": zod.string(),
-  "recommended_action": zod.string(),
-  "next_step": zod.string(),
-  "escalation_required": zod.boolean(),
+  "recommended_action": zod.string().optional(),
+  "next_step": zod.string().optional(),
+  "escalation_required": zod.boolean().optional(),
   "escalation_reason": zod.string().nullish(),
-  "missing_information": zod.array(zod.string()),
-  "resolution_plan": zod.array(zod.string()),
+  "missing_information": zod.array(zod.string()).optional(),
+  "resolution_plan": zod.array(zod.string()).optional(),
   "assigned_agent_id": zod.number().int().nullish(),
-  "ai_failed": zod.boolean(),
+  "ai_failed": zod.boolean().optional(),
+  "ai_source": zod.enum(['groq', 'fallback']).optional(),
+  "archived": zod.boolean().optional(),
   "created_at": zod.string(),
   "updated_at": zod.string(),
   "due_at": zod.string(),
@@ -591,7 +640,116 @@ export const AssignCaseResponse = zod.object({
 
 
 /**
- * @summary Get agent dashboard analytics
+ * @summary Archive a case
+ */
+export const ArchiveCaseParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const ArchiveCaseResponse = zod.object({
+  "id": zod.number().int(),
+  "case_code": zod.string(),
+  "user_id": zod.number().int(),
+  "order_id": zod.number().int().nullish(),
+  "status": zod.string(),
+  "category": zod.string(),
+  "priority": zod.string().optional(),
+  "sentiment": zod.string().optional(),
+  "customer_intent": zod.string().optional(),
+  "summary": zod.string(),
+  "recommended_action": zod.string().optional(),
+  "next_step": zod.string().optional(),
+  "escalation_required": zod.boolean().optional(),
+  "escalation_reason": zod.string().nullish(),
+  "missing_information": zod.array(zod.string()).optional(),
+  "resolution_plan": zod.array(zod.string()).optional(),
+  "assigned_agent_id": zod.number().int().nullish(),
+  "ai_failed": zod.boolean().optional(),
+  "ai_source": zod.enum(['groq', 'fallback']).optional(),
+  "archived": zod.boolean().optional(),
+  "created_at": zod.string(),
+  "updated_at": zod.string(),
+  "due_at": zod.string(),
+  "customer_name": zod.string().nullish(),
+  "order": zod.union([zod.object({
+  "id": zod.number().int(),
+  "order_code": zod.string(),
+  "user_id": zod.number().int(),
+  "product_name": zod.string(),
+  "price": zod.number(),
+  "order_date": zod.string(),
+  "delivery_date": zod.string(),
+  "status": zod.string()
+}),zod.null()]).optional()
+})
+
+
+/**
+ * @summary Get all promises for a case
+ */
+export const GetCasePromisesParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetCasePromisesResponseItem = zod.object({
+  "id": zod.number().int(),
+  "case_id": zod.number().int(),
+  "text": zod.string(),
+  "due_at": zod.string(),
+  "status": zod.enum(['pending', 'kept', 'broken']),
+  "created_at": zod.string()
+})
+export const GetCasePromisesResponse = zod.array(GetCasePromisesResponseItem)
+
+
+/**
+ * @summary Add or update a promise on a case
+ */
+export const UpdateCasePromiseParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+
+
+
+export const UpdateCasePromiseBody = zod.object({
+  "text": zod.string().min(1),
+  "due_at": zod.string()
+})
+
+export const UpdateCasePromiseResponse = zod.object({
+  "id": zod.number().int(),
+  "case_id": zod.number().int(),
+  "text": zod.string(),
+  "due_at": zod.string(),
+  "status": zod.enum(['pending', 'kept', 'broken']),
+  "created_at": zod.string()
+})
+
+
+/**
+ * @summary Update promise status (e.g. mark kept)
+ */
+export const UpdatePromiseStatusParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const UpdatePromiseStatusBody = zod.object({
+  "status": zod.enum(['pending', 'kept', 'broken'])
+})
+
+export const UpdatePromiseStatusResponse = zod.object({
+  "id": zod.number().int(),
+  "case_id": zod.number().int(),
+  "text": zod.string(),
+  "due_at": zod.string(),
+  "status": zod.enum(['pending', 'kept', 'broken']),
+  "created_at": zod.string()
+})
+
+
+/**
+ * @summary Agent resolution metrics summary
  */
 export const GetAnalyticsSummaryResponse = zod.object({
   "open_cases": zod.number().int(),
@@ -599,6 +757,8 @@ export const GetAnalyticsSummaryResponse = zod.object({
   "at_risk": zod.number().int(),
   "resolved_today": zod.number().int(),
   "repeat_contact_rate": zod.number(),
+  "avg_resolution_hours": zod.number(),
+  "broken_promise_rate": zod.number().nullish(),
   "by_category": zod.array(zod.object({
   "label": zod.string(),
   "value": zod.number()
@@ -607,10 +767,14 @@ export const GetAnalyticsSummaryResponse = zod.object({
   "label": zod.string(),
   "value": zod.number()
 })),
+  "resolved_per_day": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.number()
+})),
   "per_day": zod.array(zod.object({
   "label": zod.string(),
   "value": zod.number()
-}))
+})).optional()
 })
 
 
