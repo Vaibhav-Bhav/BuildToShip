@@ -41,21 +41,27 @@ import {
   UpdateCaseStatusBody,
   UpdateCaseStatusParams,
   UpdateCaseStatusResponse,
+  GetAttachmentUrlResponse,
   UploadAttachmentBody,
   UploadAttachmentParams,
   UploadAttachmentResponse,
 } from "@workspace/api-zod";
 import { requireAuth, requireRole } from "../middlewares/auth";
 import { analyzeIssue, generateReply, generateResolutionPlan } from "../services/aiService";
+import { uploadEvidenceFile, createAttachmentSignedUrl } from "../lib/storage";
 
 const router: IRouter = Router();
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: "uploads",
-    filename: (_req, file, cb) => cb(null, `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9._-]/g, "-")}`),
-  }),
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => cb(null, file.mimetype.startsWith("image/")),
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max
+  fileFilter: (_req, file, cb) => {
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only JPEG, PNG, and WebP images are permitted"));
+    }
+  },
 });
 
 const parseJson = <T>(value: string | null | undefined, fallback: T): T => {
@@ -260,15 +266,92 @@ router.post("/cases/:id/attachments", requireAuth, upload.single("file"), async 
   const row = await findCase(params.data.id);
   if (!row) { res.status(404).json({ error: "Case not found" }); return; }
   if (!userCanAccess(req, row.userId)) { res.status(403).json({ error: "You can only access your own cases" }); return; }
+
   const file = req.file;
   const body = UploadAttachmentBody.safeParse(req.body);
   if (!file && !body.success) { res.status(400).json({ error: "An image is required" }); return; }
+
   const fileName = file?.originalname ?? (body.success ? body.data.file_name : "evidence.jpg");
-  const filePath = file ? `/uploads/${file.filename}` : `data:image/*;base64,${body.success ? body.data.file_data : ""}`;
-  const now = new Date().toISOString();
-  const [attachment] = await db.insert(attachmentsTable).values({ caseId: row.id, fileName, filePath, uploadedAt: now }).returning();
-  await addEvent(row.id, "EVIDENCE_SUBMITTED", `Evidence uploaded: ${fileName}`, req.user!.role, req.user!.id);
-  res.status(201).json(UploadAttachmentResponse.parse({ id: attachment.id, case_id: attachment.caseId, file_name: attachment.fileName, file_path: attachment.filePath, uploaded_at: attachment.uploadedAt }));
+  const buffer = file?.buffer ?? (body.success ? Buffer.from(body.data.file_data, "base64") : Buffer.alloc(0));
+
+  try {
+    const { storagePath, mimeType, sizeBytes } = await uploadEvidenceFile(row.id, buffer, fileName);
+    const now = new Date().toISOString();
+    const [attachment] = await db
+      .insert(attachmentsTable)
+      .values({
+        caseId: row.id,
+        fileName,
+        filePath: storagePath,
+        storagePath,
+        mimeType,
+        sizeBytes,
+        uploadedAt: now,
+      })
+      .returning();
+
+    await addEvent(
+      row.id,
+      "EVIDENCE_SUBMITTED",
+      `Evidence uploaded: ${fileName}`,
+      req.user!.role,
+      req.user!.id,
+    );
+
+    res.status(201).json(
+      UploadAttachmentResponse.parse({
+        id: attachment.id,
+        case_id: attachment.caseId,
+        file_name: attachment.fileName,
+        file_path: attachment.filePath,
+        storage_path: attachment.storagePath ?? undefined,
+        mime_type: attachment.mimeType ?? undefined,
+        size_bytes: attachment.sizeBytes ?? undefined,
+        uploaded_at: attachment.uploadedAt,
+      }),
+    );
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Upload failed";
+    res.status(400).json({ error: message });
+  }
+});
+
+router.get("/attachments/:id/url", requireAuth, async (req, res): Promise<void> => {
+  const attachmentId = idFrom(req.params.id);
+  if (Number.isNaN(attachmentId) || attachmentId <= 0) {
+    res.status(400).json({ error: "Invalid attachment id" });
+    return;
+  }
+
+  const [attachment] = await db
+    .select()
+    .from(attachmentsTable)
+    .where(eq(attachmentsTable.id, attachmentId));
+
+  if (!attachment) {
+    res.status(404).json({ error: "Attachment not found" });
+    return;
+  }
+
+  const caseRow = await findCase(attachment.caseId);
+  if (!caseRow) {
+    res.status(404).json({ error: "Case not found" });
+    return;
+  }
+
+  if (!userCanAccess(req, caseRow.userId)) {
+    res.status(403).json({ error: "You do not have permission to view this attachment" });
+    return;
+  }
+
+  try {
+    const targetPath = attachment.storagePath || attachment.filePath;
+    const signedData = await createAttachmentSignedUrl(targetPath, 60);
+    res.json(GetAttachmentUrlResponse.parse(signedData));
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to generate signed URL";
+    res.status(500).json({ error: message });
+  }
 });
 
 router.post("/cases/:id/generate-reply", requireAuth, requireRole("agent"), async (req, res): Promise<void> => {

@@ -9,9 +9,9 @@
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./apps/**\" --filter \"./scripts\" --if-present run typecheck",
     "codegen": "pnpm --filter @workspace/api-spec run codegen",
-    "db:generate": "node -e \"console.log('not set up yet'); process.exit(0)\"",
-    "db:migrate": "node -e \"console.log('not set up yet'); process.exit(0)\"",
-    "db:seed": "node -e \"console.log('not set up yet'); process.exit(0)\""
+    "db:generate": "pnpm --filter @workspace/db run generate",
+    "db:migrate": "pnpm --filter @workspace/api-server exec tsx --env-file-if-exists=../../.env --env-file-if-exists=.env src/scripts/migrate.ts",
+    "db:seed": "pnpm --filter @workspace/api-server exec tsx --env-file-if-exists=../../.env --env-file-if-exists=.env src/scripts/seed.ts"
   },
   "private": true,
   "dependencies": {

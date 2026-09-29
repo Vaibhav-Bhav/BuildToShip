@@ -24,6 +24,7 @@ import type {
   AssignInput,
   Attachment,
   AttachmentUploadInput,
+  AttachmentUrlResponse,
   AuthResponse,
   Case,
   CaseDetail,
@@ -1059,6 +1060,83 @@ export const useUploadAttachment = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getUploadAttachmentMutationOptions(options));
     }
+
+export const getGetAttachmentUrlUrl = (id: number,) => {
+
+
+
+
+  return `/api/attachments/${id}/url`
+}
+
+/**
+ * @summary Get a signed URL for an attachment
+ */
+export const getAttachmentUrl = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<AttachmentUrlResponse> => {
+
+  return customFetch<AttachmentUrlResponse>(getGetAttachmentUrlUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAttachmentUrlQueryKey = (id: number,) => {
+    return [
+    `/api/attachments/${id}/url`
+    ] as const;
+    }
+
+
+export const getGetAttachmentUrlQueryOptions = <TData = Awaited<ReturnType<typeof getAttachmentUrl>>, TError = ErrorType<ErrorResponse>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAttachmentUrl>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAttachmentUrlQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAttachmentUrl>>> = ({ signal }) => getAttachmentUrl(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAttachmentUrl>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAttachmentUrlQueryResult = NonNullable<Awaited<ReturnType<typeof getAttachmentUrl>>>
+export type GetAttachmentUrlQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Get a signed URL for an attachment
+ */
+
+export function useGetAttachmentUrl<TData = Awaited<ReturnType<typeof getAttachmentUrl>>, TError = ErrorType<ErrorResponse>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAttachmentUrl>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAttachmentUrlQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGenerateReplyUrl = (id: number,) => {
 

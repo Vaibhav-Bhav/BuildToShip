@@ -234,6 +234,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Attachment"
+  /attachments/{id}/url:
+    get:
+      operationId: getAttachmentUrl
+      tags: [cases]
+      summary: Get a signed URL for an attachment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Signed URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttachmentUrlResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
   /cases/{id}/generate-reply:
     post:
       operationId: generateReply
@@ -489,8 +513,17 @@ components:
         case_id: { type: integer }
         file_name: { type: string }
         file_path: { type: string }
+        storage_path: { type: string }
+        mime_type: { type: string }
+        size_bytes: { type: integer }
         uploaded_at: { type: string }
       required: [id, case_id, file_name, file_path, uploaded_at]
+    AttachmentUrlResponse:
+      type: object
+      properties:
+        url: { type: string }
+        expires_in: { type: integer }
+      required: [url, expires_in]
     AttachmentUploadInput:
       type: object
       properties:

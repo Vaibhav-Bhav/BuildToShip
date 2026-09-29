@@ -222,6 +222,9 @@ export const CreateCaseResponse = zod.object({
   "case_id": zod.number().int(),
   "file_name": zod.string(),
   "file_path": zod.string(),
+  "storage_path": zod.string().optional(),
+  "mime_type": zod.string().optional(),
+  "size_bytes": zod.number().int().optional(),
   "uploaded_at": zod.string()
 }))
 }))
@@ -329,6 +332,9 @@ export const GetCaseResponse = zod.object({
   "case_id": zod.number().int(),
   "file_name": zod.string(),
   "file_path": zod.string(),
+  "storage_path": zod.string().optional(),
+  "mime_type": zod.string().optional(),
+  "size_bytes": zod.number().int().optional(),
   "uploaded_at": zod.string()
 }))
 }))
@@ -378,7 +384,23 @@ export const UploadAttachmentResponse = zod.object({
   "case_id": zod.number().int(),
   "file_name": zod.string(),
   "file_path": zod.string(),
+  "storage_path": zod.string().optional(),
+  "mime_type": zod.string().optional(),
+  "size_bytes": zod.number().int().optional(),
   "uploaded_at": zod.string()
+})
+
+
+/**
+ * @summary Get a signed URL for an attachment
+ */
+export const GetAttachmentUrlParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetAttachmentUrlResponse = zod.object({
+  "url": zod.string(),
+  "expires_in": zod.number().int()
 })
 
 

@@ -11,6 +11,7 @@ export * from './analyticsSummary';
 export * from './assignInput';
 export * from './attachment';
 export * from './attachmentUploadInput';
+export * from './attachmentUrlResponse';
 export * from './authResponse';
 export * from './case';
 export * from './caseDetail';

@@ -11,5 +11,8 @@ export interface Attachment {
   case_id: number;
   file_name: string;
   file_path: string;
+  storage_path?: string;
+  mime_type?: string;
+  size_bytes?: number;
   uploaded_at: string;
 }
