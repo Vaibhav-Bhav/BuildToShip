@@ -61,7 +61,7 @@ export async function generateDraftReply(ticketContext: string, messageHistory: 
         {
           role: "system",
           content:
-            "You are a polite, empathetic customer support agent. Draft a brief, helpful reply to the customer's latest message based on the ticket context and message history. Do not include signature placeholders.",
+            "You are an expert customer support agent working for ResolveAI. Draft a highly contextual, helpful, and empathetic reply to the customer's latest message. Directly address their specific issue based on the provided Ticket Context and Message History. Provide actionable next steps or clear explanations. Do not use generic phrases like 'an agent will contact you soon' — YOU are the agent acting on this ticket right now. Keep it concise but fully resolved or explanatory. Do not include signature placeholders.",
         },
         {
           role: "user",
@@ -70,10 +70,10 @@ export async function generateDraftReply(ticketContext: string, messageHistory: 
       ],
     });
 
-    return response.choices[0]?.message?.content || "Thank you for reaching out. An agent will be with you shortly.";
+    return response.choices[0]?.message?.content || "Hi there. I've reviewed your ticket details and we are currently working on a resolution. Could you please provide any additional context if you haven't already?";
   } catch (error) {
     console.error("Groq reply error:", error);
-    return "Thank you for reaching out. An agent will be with you shortly.";
+    return "Hi there. I've reviewed your ticket details and we are currently working on a resolution. Could you please provide any additional context if you haven't already?";
   }
 }
 
