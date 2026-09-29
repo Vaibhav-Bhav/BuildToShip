@@ -186,6 +186,25 @@ export default function AgentCaseWorkspacePage() {
     );
   };
 
+  const handleDraftAIReply = () => {
+    generateReplyMutation.mutate(
+      {
+        id: caseId,
+        data: {
+          tone: "warm",
+          body: caseDetail?.summary || "Resolution reply",
+        },
+      },
+      {
+        onSuccess: (res: any) => {
+          setMessageBody(res.draft);
+          toast("AI Draft populated in chat input!", "success");
+        },
+        onError: (err: any) => toast(err?.data?.error || "Draft generation failed", "error"),
+      }
+    );
+  };
+
   const handleSendReply = () => {
     if (!replyDraft.trim()) return;
     if (replyWarnings.length > 0 && !sendReplyConfirmOpen) {
@@ -477,7 +496,17 @@ export default function AgentCaseWorkspacePage() {
                 rows={2}
                 disabled={addMessageMutation.isPending}
               />
-              <div className="flex justify-end pt-1">
+              <div className="flex items-center justify-between pt-1">
+                <NeuButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleDraftAIReply}
+                  disabled={generateReplyMutation.isPending || addMessageMutation.isPending}
+                  loading={generateReplyMutation.isPending}
+                  icon={<Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />}
+                >
+                  ✨ Draft AI Reply
+                </NeuButton>
                 <NeuButton
                   variant="primary"
                   size="sm"

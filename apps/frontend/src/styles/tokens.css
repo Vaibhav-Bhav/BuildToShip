@@ -28,7 +28,7 @@
   --transition-neu: all 150ms ease;
 }
 
-[data-theme="dark"] {
+:root.dark, .dark {
   --bg: #2A2E37;
   --shadow-light: #353A45;
   --shadow-dark: #1E2128;
@@ -50,7 +50,7 @@
 }
 
 @media (max-width: 767px) {
-  :root, [data-theme="dark"] {
+  :root, :root.dark, .dark {
     --neu-raised-lg: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
     --neu-raised: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
   }

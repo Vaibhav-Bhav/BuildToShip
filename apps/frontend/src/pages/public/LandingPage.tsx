@@ -13,9 +13,14 @@ import {
   CheckCircle2,
   Clock,
   MessageSquare,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "../../components/ThemeProvider";
 
 export default function LandingPage() {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col justify-between selection:bg-[var(--accent)] selection:text-[var(--accent-contrast)]">
       {/* Navigation Navbar */}
@@ -29,6 +34,13 @@ export default function LandingPage() {
           </span>
         </div>
         <div className="flex items-center gap-3 sm:gap-4">
+          <button 
+            onClick={toggleTheme} 
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--bg)] shadow-[var(--neu-raised-sm)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+            aria-label="Toggle Theme"
+          >
+            {theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+          </button>
           <Link to="/login">
             <NeuButton variant="ghost" size="sm">
               Sign In

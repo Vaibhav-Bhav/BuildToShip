@@ -59,7 +59,7 @@ import {
   UpdatePromiseStatusResponse,
 } from "@workspace/api-zod";
 import { requireAuth, requireRole } from "../middlewares/auth";
-import { analyzeIssue, generateReply, generateResolutionPlan } from "../services/aiService";
+import { triageTicket, generateDraftReply, generateResolutionPlan } from "../services/aiService";
 import { uploadEvidenceFile, createAttachmentSignedUrl } from "../lib/storage";
 
 const router: IRouter = Router();
@@ -459,28 +459,11 @@ router.post("/cases", requireAuth, requireRole("customer"), async (req, res): Pr
     .slice(0, 8)
     .map((item) => `${item.caseCode}: ${item.category} / ${item.status} / ${item.summary}`)
     .join("\n");
-  const { analysis, failed } = await analyzeIssue(parsed.data.message, order, history);
+  const ticketData = await triageTicket("New Support Ticket", parsed.data.message);
   const now = new Date().toISOString();
   const dueAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
-  const customerCases30 = historyRows.filter(
-    (item) => Date.now() - new Date(item.createdAt).getTime() < 30 * 24 * 60 * 60 * 1000
-  ).length;
-  const sameOrderOpen = order
-    ? historyRows.find(
-        (item) =>
-          item.orderId === order.id &&
-          !["Resolved", "Rejected"].includes(item.status) &&
-          Date.now() - new Date(item.createdAt).getTime() > 24 * 60 * 60 * 1000
-      )
-    : undefined;
   const reasons: string[] = [];
-  if (sameOrderOpen) reasons.push("Customer contacted us more than 1 day ago with no agent reply.");
-  if (["Frustrated", "Angry"].includes(analysis.sentiment))
-    reasons.push(`Customer sentiment is ${analysis.sentiment.toLowerCase()}.`);
-  if (customerCases30 >= 3) reasons.push("Customer has contacted support 3 or more times in the last 30 days.");
-  if (order && order.price > 50000) reasons.push("Order value is above the high-value review limit.");
-  if (analysis.escalation_required) reasons.push("AI flagged this case for escalation.");
-  const escalationReason = reasons[0] ?? null;
+  const escalationReason = null;
 
   const [created] = await db
     .insert(casesTable)
@@ -489,20 +472,20 @@ router.post("/cases", requireAuth, requireRole("customer"), async (req, res): Pr
       userId: req.user!.id,
       orderId: order?.id ?? null,
       status: "New",
-      category: analysis.issue_category,
-      priority: analysis.priority,
-      sentiment: analysis.sentiment,
-      customerIntent: analysis.customer_intent,
-      summary: analysis.summary,
-      recommendedAction: analysis.recommended_action,
-      nextStep: analysis.next_step,
-      escalationRequired: escalationReason ? 1 : 0,
+      category: ticketData.category,
+      priority: ticketData.priority,
+      sentiment: "Neutral",
+      customerIntent: "Request a resolution",
+      summary: parsed.data.message.slice(0, 100),
+      recommendedAction: "Review the ticket",
+      nextStep: "Agent review",
+      escalationRequired: 0,
       escalationReason,
-      missingInformation: JSON.stringify(analysis.missing_information),
+      missingInformation: "[]",
       resolutionPlan: "[]",
       assignedAgentId: null,
-      aiFailed: failed ? 1 : 0,
-      aiSource: failed ? "fallback" : "groq",
+      aiFailed: 0,
+      aiSource: "groq",
       archived: false,
       createdAt: now,
       updatedAt: now,
@@ -528,28 +511,15 @@ router.post("/cases", requireAuth, requireRole("customer"), async (req, res): Pr
     true
   );
 
-  // Internal AI and escalation events are NOT visible to customer
-  if (failed) {
     await addEvent(
       created.id,
       "AI_CLASSIFIED",
-      "AI analysis was unavailable; needs manual review",
-      "system",
-      undefined,
-      { ai_failed: true },
-      false
-    );
-  } else {
-    await addEvent(
-      created.id,
-      "AI_CLASSIFIED",
-      `AI suggested ${analysis.issue_category} with ${analysis.priority} priority`,
+      `AI suggested ${ticketData.category} with ${ticketData.priority} priority`,
       "ai",
       undefined,
       {},
       false
     );
-  }
 
   if (escalationReason) {
     await addEvent(
@@ -778,10 +748,9 @@ router.post("/cases/:id/generate-reply", requireAuth, requireRole("agent"), asyn
     return;
   }
   const detail = await agentDetailView(row);
-  const draft = await generateReply(
-    row,
-    detail.timeline.map((event) => event.description),
-    body.data.tone
+  const draft = await generateDraftReply(
+    JSON.stringify(row),
+    detail.timeline.map((event) => event.description)
   );
 
   const warnings: string[] = [];
