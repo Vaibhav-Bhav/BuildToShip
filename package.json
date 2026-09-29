@@ -4,15 +4,23 @@
   "license": "MIT",
   "scripts": {
     "preinstall": "node scripts/check-pm.mjs",
+    "dev": "pnpm -r --parallel --filter \"./apps/*\" run dev",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./apps/**\" --filter \"./scripts\" --if-present run typecheck",
+    "codegen": "pnpm --filter @workspace/api-spec run codegen",
+    "db:generate": "node -e \"console.log('not set up yet'); process.exit(0)\"",
+    "db:migrate": "node -e \"console.log('not set up yet'); process.exit(0)\"",
+    "db:seed": "node -e \"console.log('not set up yet'); process.exit(0)\""
   },
   "private": true,
   "dependencies": {
     "@replit/connectors-sdk": "^0.4.3"
   },
   "devDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.63.5",
+    "@tailwindcss/oxide-win32-x64-msvc": "4.3.3",
+    "lightningcss-win32-x64-msvc": "1.32.0",
     "prettier": "^3.9.6",
     "typescript": "~5.9.3"
   }

@@ -3,7 +3,7 @@ previewPath = "/"
 title = "ResolveAI"
 description = "An AI resolution copilot for customer support teams. Customers report post-purchase issues with full context, while agents review AI suggestions, timelines, and resolution plans before deciding."
 version = "1.0.0"
-id = "artifacts/resolve-ai"
+id = "apps/frontend"
 router = "path"
 
 [[services]]
@@ -17,7 +17,7 @@ run = "pnpm --filter @workspace/resolve-ai run dev"
 [services.production]
 build = [ "pnpm", "--filter", "@workspace/resolve-ai", "run", "build" ]
 serve = "static"
-publicDir = "artifacts/resolve-ai/dist/public"
+publicDir = "apps/frontend/dist/public"
 
 [[services.production.rewrites]]
 from = "/*"

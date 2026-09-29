@@ -16,7 +16,7 @@ export function useAuth() {
       enabled: !!token,
       retry: false,
       staleTime: 5 * 60 * 1000,
-    },
+    } as any,
   });
 
   const user = token && data ? (data as AuthUser) : null;
