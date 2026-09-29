@@ -1,0 +1,66 @@
+:root {
+  --bg: #E0E5EC;
+  --shadow-light: #FFFFFF;
+  --shadow-dark: #A3B1C6;
+  --text: #1F2937;
+  --text-muted: #4A5568;
+  --accent: #3B4BD8;
+  --accent-contrast: #FFFFFF;
+  --success: #0F766E;
+  --warning: #B45309;
+  --danger: #B91C1C;
+  --info: #1D4ED8;
+  --input-border: rgba(163, 177, 198, 0.45);
+
+  --neu-raised-lg: 12px 12px 24px var(--shadow-dark), -12px -12px 24px var(--shadow-light);
+  --neu-raised: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+  --neu-raised-sm: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+  --neu-inset: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
+  --neu-inset-sm: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+
+  --radius-ctrl: 12px;
+  --radius-card: 20px;
+  --radius-panel: 28px;
+  --radius-pill: 9999px;
+
+  --font-sans: "DM Sans Variable", "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --transition-neu: all 150ms ease;
+}
+
+[data-theme="dark"] {
+  --bg: #2A2E37;
+  --shadow-light: #353A45;
+  --shadow-dark: #1E2128;
+  --text: #E5E7EB;
+  --text-muted: #A0AEC0;
+  --accent: #8B9BFF;
+  --accent-contrast: #14171F;
+  --success: #5EEAD4;
+  --warning: #FBBF24;
+  --danger: #FCA5A5;
+  --info: #93C5FD;
+  --input-border: rgba(30, 33, 40, 0.65);
+
+  --neu-raised-lg: 12px 12px 24px var(--shadow-dark), -12px -12px 24px var(--shadow-light);
+  --neu-raised: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+  --neu-raised-sm: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+  --neu-inset: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
+  --neu-inset-sm: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+}
+
+@media (max-width: 767px) {
+  :root, [data-theme="dark"] {
+    --neu-raised-lg: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+    --neu-raised: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

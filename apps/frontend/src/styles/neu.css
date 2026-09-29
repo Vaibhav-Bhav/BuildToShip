@@ -1,0 +1,113 @@
+/* Base Neumorphic Utility Classes */
+
+.bg-neu {
+  background-color: var(--bg);
+}
+
+.text-neu {
+  color: var(--text);
+}
+
+.text-neu-muted {
+  color: var(--text-muted);
+}
+
+/* Shadows */
+.neu-raised-lg {
+  background-color: var(--bg);
+  box-shadow: var(--neu-raised-lg);
+  border-radius: var(--radius-panel);
+}
+
+.neu-raised {
+  background-color: var(--bg);
+  box-shadow: var(--neu-raised);
+  border-radius: var(--radius-card);
+}
+
+.neu-raised-sm {
+  background-color: var(--bg);
+  box-shadow: var(--neu-raised-sm);
+  border-radius: var(--radius-ctrl);
+}
+
+.neu-inset {
+  background-color: var(--bg);
+  box-shadow: var(--neu-inset);
+  border-radius: var(--radius-card);
+}
+
+.neu-inset-sm {
+  background-color: var(--bg);
+  box-shadow: var(--neu-inset-sm);
+  border-radius: var(--radius-ctrl);
+}
+
+.neu-flat {
+  background-color: var(--bg);
+}
+
+/* Controls Interactive Press States */
+.neu-pressable {
+  transition: box-shadow 150ms ease, transform 150ms ease;
+  user-select: none;
+}
+
+.neu-pressable:active:not(:disabled) {
+  box-shadow: var(--neu-inset-sm) !important;
+  transform: translateY(1px);
+}
+
+/* Focus Visible */
+*:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 3px !important;
+}
+
+/* Input Common Style */
+.neu-field {
+  background-color: var(--bg);
+  color: var(--text);
+  box-shadow: var(--neu-inset-sm);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-ctrl);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 24px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.neu-field:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.neu-field::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* Chart Well */
+.neu-chart-well {
+  background-color: var(--bg);
+  box-shadow: var(--neu-inset);
+  border-radius: var(--radius-card);
+  padding: 16px;
+}
+
+/* Typography Helpers */
+.font-mono-code {
+  font-family: var(--font-mono);
+}
+
+.sr-only-table {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
