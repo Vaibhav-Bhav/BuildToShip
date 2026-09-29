@@ -74,6 +74,25 @@ export const GetMeResponse = zod.object({
 
 
 /**
+ * @summary Update the current user's name
+ */
+export const updateMeBodyNameMin = 2;
+
+
+
+export const UpdateMeBody = zod.object({
+  "name": zod.string().min(updateMeBodyNameMin)
+})
+
+export const UpdateMeResponse = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "role": zod.enum(['customer', 'agent'])
+})
+
+
+/**
  * @summary List orders for the current customer
  */
 export const GetMyOrdersResponseItem = zod.object({

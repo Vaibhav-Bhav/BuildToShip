@@ -46,6 +46,11 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface UpdateMeInput {
+  /** @minLength 2 */
+  name: string;
+}
+
 export interface Order {
   id: number;
   order_code: string;

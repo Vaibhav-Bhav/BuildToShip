@@ -36,5 +36,6 @@ export * from './replyInputTone';
 export * from './statusInput';
 export * from './statusInputStatus';
 export * from './statusParameter';
+export * from './updateMeInput';
 export * from './user';
 export * from './userRole';

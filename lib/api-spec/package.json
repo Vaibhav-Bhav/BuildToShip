@@ -6,6 +6,7 @@
     "codegen": "orval --config ./orval.config.ts && pnpm -w run typecheck:libs"
   },
   "devDependencies": {
+    "@esbuild/win32-x64": "0.28.2",
     "orval": "^8.30.0"
   }
 }

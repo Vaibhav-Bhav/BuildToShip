@@ -86,6 +86,27 @@ paths:
                 $ref: "#/components/schemas/User"
         "401":
           $ref: "#/components/responses/Error"
+    put:
+      operationId: updateMe
+      tags: [auth]
+      summary: Update the current user's name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMeInput"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Error"
+        "400":
+          $ref: "#/components/responses/Error"
   /orders/mine:
     get:
       operationId: getMyOrders
@@ -366,6 +387,11 @@ components:
         token: { type: string }
         user: { $ref: "#/components/schemas/User" }
       required: [token, user]
+    UpdateMeInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 2 }
+      required: [name]
     Order:
       type: object
       properties:
