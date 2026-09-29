@@ -23,17 +23,17 @@ Required environment:
 - Frontend: React, Vite, Wouter, Tailwind CSS, React Query, Recharts
 - API: Express 5 with Helmet, CORS, rate limiting, Multer, and structured Pino logging
 - Database: PostgreSQL with Drizzle ORM
-- Validation: generated Zod schemas from `lib/api-spec/openapi.yaml`, plus validated AI output
+- Validation: generated Zod schemas from `packages/api-spec/openapi.yaml`, plus validated AI output
 - AI: Groq `llama-3.3-70b-versatile`, backend-only, with safe deterministic fallback when the key is unavailable
 
 ## Where things live
 
-- `artifacts/resolve-ai/src/` — React app, shared shell, customer flows, and agent workspace
-- `artifacts/api-server/src/routes/` — auth, cases, attachments, analytics, and status/reply actions
-- `artifacts/api-server/src/services/aiService.ts` — Groq integration, prompt safety, validation, and fallback analysis
-- `artifacts/api-server/src/seed.ts` — first-start demo accounts, orders, cases, and timelines
-- `lib/api-spec/openapi.yaml` — source of truth for the API contract
-- `lib/db/src/schema/resolve.ts` — database schema
+- `apps/frontend/src/` — React app, shared shell, customer flows, and agent workspace
+- `apps/backend/src/routes/` — auth, cases, attachments, analytics, and status/reply actions
+- `apps/backend/src/services/aiService.ts` — Groq integration, prompt safety, validation, and fallback analysis
+- `apps/backend/src/seed.ts` — first-start demo accounts, orders, cases, and timelines
+- `packages/api-spec/openapi.yaml` — source of truth for the API contract
+- `packages/db/src/schema/resolve.ts` — database schema
 
 ## Product
 

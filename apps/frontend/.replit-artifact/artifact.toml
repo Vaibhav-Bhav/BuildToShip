@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "ResolveAI"
+description = "An AI resolution copilot for customer support teams. Customers report post-purchase issues with full context, while agents review AI suggestions, timelines, and resolution plans before deciding."
+version = "1.0.0"
+id = "apps/frontend"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19268
+
+[services.development]
+run = "pnpm --filter @workspace/resolve-ai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/resolve-ai", "run", "build" ]
+serve = "static"
+publicDir = "apps/frontend/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19268"
+BASE_PATH = "/"

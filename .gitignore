@@ -54,5 +54,5 @@ Thumbs.db
 !.env.example
 *.db
 *.sqlite
-artifacts/api-server/uploads/*
-!artifacts/api-server/uploads/.gitkeep
+apps/backend/uploads/*
+!apps/backend/uploads/.gitkeep
